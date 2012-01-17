@@ -69,7 +69,9 @@ rsr.on('connection', function (socket) {
       fn(false);
       nicknames[nick] = socket.nickname = nick;
       socket.broadcast.emit('announcement', nick + ' connected');
+      //OLD: io.sockets.emit('nicknames', nicknames);
       io.sockets.emit('nicknames', nicknames);
+      rsr.r_emit('nicknames', nicknames);
     }
   });
 
