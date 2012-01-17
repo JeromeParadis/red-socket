@@ -20,7 +20,7 @@ function Manager(io, options) {
 
 	this.rc_sub.on("message", function (channel, json) {
 		var content = JSON.parse(json);
-	}
+	});
 
 	this.on = function(msg,cb) {
 		self.io.sockets.on(msg,function(socket) {
@@ -29,7 +29,7 @@ function Manager(io, options) {
 			}
 			socket.r_broadcast_emit = function() {
 				console.log('r_broadcast_emit');
-				socket.broadcast.emit.apply(parameters);
+				socket.broadcast.emit.apply(socket,arguments);
 			};
 			cb && cb(socket);
 		});
