@@ -5,7 +5,8 @@
 var express = require('express')
   , stylus = require('stylus')
   , nib = require('nib')
-  , sio = require('../../lib/socket.io');
+  , sio = require('../../lib/socket.io'),
+  , RedSocket = require('../../index');
 
 /**
  * App.
@@ -54,9 +55,11 @@ app.listen(3000, function () {
 var io = sio.listen(app)
   , nicknames = {};
 
-io.sockets.on('connection', function (socket) {
+var rsr = RedSocket(io);
+
+rsr.on('connection', function (socket) {
   socket.on('user message', function (msg) {
-    socket.broadcast.emit('user message', socket.nickname, msg);
+    socket.r_broadcast_emit('user message', socket.nickname, msg);
   });
 
   socket.on('nickname', function (nick, fn) {
