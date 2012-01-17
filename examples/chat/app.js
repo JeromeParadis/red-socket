@@ -59,6 +59,7 @@ var rsr = RedSocket(io);
 
 rsr.on('connection', function (socket) {
   socket.on('user message', function (msg) {
+    //socket.broadcast.emit('announcement', nick + ' connected');
     socket.r_broadcast_emit('user message', socket.nickname, msg);
   });
 

@@ -32,38 +32,56 @@ function Manager(io, options) {
 		// console.log("JSON",JSON.stringify(json));
 		var content = JSON.parse(json);
 		console.log("Message received",content);
+		console.log(content.command);
 		switch(content.command) {
 			case "r_emit":
-				console.log("r_emit");
-				self.io.sockets.emit(content.args);
+				self.io.sockets.emit(content.args[0],content.args[1]);
+				break;
+			case "r_broadcast_emit":
+				// console.log("TRANSPORTS: ", self.io.sockets.manager.transports)
+				for(socket in self.io.sockets.manager.sockets.sockets) {
+					// console.log("SOCKET args: ",socket.id);
+					// console.log("SOCKET: ",socket);
+					// console.log("SOCKET transport: ",self.io.sockets.manager.transports[socket]);
+					var args = Array.prototype.slice.call(content.args);
+					io.sockets.socket(socket).emit(content.args[0],args.slice(1)); // Ref: http://chrissilich.com/blog/socket-io-0-7-sending-messages-to-individual-clients/
+				}
 				break;
 		}
 	});
 
 	this.on = function(msg,cb) {
 		self.io.sockets.on(msg,function(socket) {
+			console.log("SOCKET ID: ",socket.id)
 			if (msg == 'connection') {
 				console.log("New connection");
 			}
 			socket.r_broadcast_emit = function() {
+				var content = {
+					command: "r_broadcast_emit",
+					client_id: socket.id,
+					process_id: self.process_id,
+					args: arguments
+				};
 				console.log('r_broadcast_emit');
 				socket.broadcast.emit.apply(socket,arguments);
+				self.rc_pub.publish(self.redis_channel,JSON.stringify(content));
 			};
 			cb && cb(socket);
 		});
 	};
 
 	this.r_emit = function() {
-		console.log("r_emit calling")
-		args = Array.prototype.slice.call(arguments);
-		console.log("ARGUMENTS",args);
-		console.log("ARGS",args);
+		// console.log("SOCKETS: ",self.io.sockets.manager.sockets.sockets);
+		// console.log("--END SOCKETS");
+		// console.log("r_emit calling")
+		// console.log("ARGUMENTS",arguments);
 		var content = {
 			command: "r_emit",
 			process_id: self.process_id,
 			args: arguments
 		};
-		//self.rc_pub.publish(self.redis_channel,JSON.stringify(content));
+		self.rc_pub.publish(self.redis_channel,JSON.stringify(content));
 		self.io.sockets.emit(arguments[0],arguments[1]);
 	};
 
