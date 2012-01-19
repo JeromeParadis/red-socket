@@ -64,7 +64,7 @@ function Manager(io, options) {
 					args: arguments
 				};
 				console.log('r_broadcast_emit');
-				socket.broadcast.emit.apply(socket,arguments);
+				//socket.broadcast.emit.apply(socket,arguments);
 				self.rc_pub.publish(self.redis_channel,JSON.stringify(content));
 			};
 			cb && cb(socket);
@@ -82,7 +82,7 @@ function Manager(io, options) {
 			args: arguments
 		};
 		self.rc_pub.publish(self.redis_channel,JSON.stringify(content));
-		self.io.sockets.emit(arguments[0],arguments[1]);
+		//self.io.sockets.emit(arguments[0],arguments[1]);
 	};
 
 	return this;
