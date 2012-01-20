@@ -37,6 +37,13 @@ function Manager(io, options) {
 			case "r_emit":
 				self.io.sockets.emit(content.args[0],content.args[1]);
 				break;
+			case "r_send_user":
+				var sock = io.sockets.socket(content.client_id);
+				if (sock && sock.id) {
+					console.log("sending direct update to ",sock.id)
+					sock.emit(content.type,content.message);
+				}
+				break;
 			case "r_broadcast_emit":
 				// console.log("TRANSPORTS: ", self.io.sockets.manager.transports)
 				for(socket in self.io.sockets.manager.sockets.sockets) {
@@ -69,6 +76,19 @@ function Manager(io, options) {
 			};
 			cb && cb(socket);
 		});
+	};
+
+	this.r_send_user = function(socketid,type,msg) {
+		var content = {
+			command: "r_send_user",
+			client_id: socketid,
+			process_id: self.process_id,
+			type: type,
+			message: msg
+		};
+		console.log('r_send_user');
+		//socket.broadcast.emit.apply(socket,arguments);
+		self.rc_pub.publish(self.redis_channel,JSON.stringify(content));		
 	};
 
 	this.r_emit = function() {
