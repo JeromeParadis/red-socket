@@ -68,6 +68,15 @@ function Manager(io, options) {
 			});
 		};
 
+		this.delete_set = function(callback) {
+			self.rc.del(set_key,function(err,result) {
+				if (!err)
+					callback && callback(true); // success
+				else
+					callback && callback(false); // error	
+			});
+		};
+
 		this.get_members = function(callback) {
 			self.debug("Sets.get_members()");
 			self.rc.smembers(set_key,function(err,members) {
