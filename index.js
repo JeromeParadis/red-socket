@@ -46,12 +46,30 @@ function Manager(io, options) {
 				break;
 			case "r_broadcast_emit":
 				// console.log("TRANSPORTS: ", self.io.sockets.manager.transports)
-				for(socket in self.io.sockets.manager.sockets.sockets) {
-					// console.log("SOCKET args: ",socket.id);
-					// console.log("SOCKET: ",socket);
-					// console.log("SOCKET transport: ",self.io.sockets.manager.transports[socket]);
-					var args = Array.prototype.slice.call(content.args);
-					io.sockets.socket(socket).emit(content.args[0],args.slice(1)); // Ref: http://chrissilich.com/blog/socket-io-0-7-sending-messages-to-individual-clients/
+				if (self.process_id == content.process_id) {
+					// Sent by same process, use broadcast
+					// i.e.: find emitting socket and use broadcast.emit method
+					// ------------------------------
+					var sock = io.sockets.socket(content.client_id).broadcast;
+					if (sock)
+						sock.emit.apply(sock,content.args);
+					else
+						// Socket,d oesnt exist anymore
+						// Use global emit
+						self.io.sockets.emit(content.args[0],content.args[1]);
+
+					// for(socket in self.io.sockets.manager.sockets.sockets) {
+					// 	var sock = io.sockets.socket(socket).broadcast;
+					// 	if (sock)
+					// 		sock.emit.apply(sock,content.args);
+					// 	//io.sockets.socket(socket).emit(content.args[0],content.args.slice(1)); // Ref: http://chrissilich.com/blog/socket-io-0-7-sending-messages-to-individual-clients/
+					// }
+					
+				}
+				else {
+					// Different process, use emit
+					// ------------------------------
+					self.io.sockets.emit(content.args[0],content.args[1]);
 				}
 				break;
 		}
@@ -64,13 +82,19 @@ function Manager(io, options) {
 				console.log("New connection");
 			}
 			socket.r_broadcast_emit = function() {
+				console.log('ARGUMENTS:',arguments);
+				var args = [];
+				for (var i=0;i<arguments.length;i++) {
+					args.push(arguments[i]);
+				}
 				var content = {
 					command: "r_broadcast_emit",
 					client_id: socket.id,
 					process_id: self.process_id,
-					args: arguments
+					args: args
 				};
 				console.log('r_broadcast_emit');
+				console.log('CONTENT:',content);
 				//socket.broadcast.emit.apply(socket,arguments);
 				self.rc_pub.publish(self.redis_channel,JSON.stringify(content));
 			};

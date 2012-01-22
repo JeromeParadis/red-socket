@@ -59,7 +59,7 @@ var rsr = RedSocket(io);
 
 rsr.on('connection', function (socket) {
   socket.on('user message', function (msg) {
-    //socket.broadcast.emit('announcement', nick + ' connected');
+    //socket.broadcast.emit('user message', socket.nickname, msg);
     socket.r_broadcast_emit('user message', socket.nickname, msg);
   });
 
@@ -69,9 +69,9 @@ rsr.on('connection', function (socket) {
     } else {
       fn(false);
       nicknames[nick] = socket.nickname = nick;
-      socket.broadcast.emit('announcement', nick + ' connected');
+      //OLD: socket.broadcast.emit('announcement', nick + ' connected');
+      socket.r_broadcast_emit('announcement', nick + ' connected');
       //OLD: io.sockets.emit('nicknames', nicknames);
-      io.sockets.emit('nicknames', nicknames);
       rsr.r_emit('nicknames', nicknames);
     }
   });
@@ -80,7 +80,9 @@ rsr.on('connection', function (socket) {
     if (!socket.nickname) return;
 
     delete nicknames[socket.nickname];
-    socket.broadcast.emit('announcement', socket.nickname + ' disconnected');
-    socket.broadcast.emit('nicknames', nicknames);
+    // OLD: socket.broadcast.emit('announcement', socket.nickname + ' disconnected');
+    socket.r_broadcast_emit('announcement', socket.nickname + ' disconnected');
+    // OLD: socket.broadcast.emit('nicknames', nicknames);
+    socket.r_broadcast_emit('nicknames', nicknames);
   });
 });
