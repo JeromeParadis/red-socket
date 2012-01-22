@@ -52,10 +52,11 @@ app.listen(3000, function () {
  * Socket.IO server (single process only)
  */
 
-var io = sio.listen(app)
-  , nicknames = {};
+var io = sio.listen(app);
+//OLD:  , nicknames = {};
 
 var rsr = RedSocket(io,{debug: true});
+var nicknames = new rsr.Sets("nicknames");
 
 rsr.on('connection', function (socket) {
   socket.on('user message', function (msg) {
@@ -64,25 +65,39 @@ rsr.on('connection', function (socket) {
   });
 
   socket.on('nickname', function (nick, fn) {
-    if (nicknames[nick]) {
-      fn(true);
-    } else {
-      fn(false);
-      nicknames[nick] = socket.nickname = nick;
-      //OLD: socket.broadcast.emit('announcement', nick + ' connected');
-      socket.r_broadcast_emit('announcement', nick + ' connected');
-      //OLD: io.sockets.emit('nicknames', nicknames);
-      rsr.r_emit('nicknames', nicknames);
-    }
+    // if (nicknames[nick]) {
+    //   fn(true);
+    // } else {
+    //   fn(false);
+    //   nicknames[nick] = socket.nickname = nick;
+    //   socket.broadcast.emit('announcement', nick + ' connected');
+    //   io.sockets.emit('nicknames', nicknames);
+    // }
+    nicknames.add(nick,true,function(is_new) {
+      fn(!is_new);
+      if (is_new) {
+        // OLD: nicknames[nick] = socket.nickname = nick;
+        socket.nickname = nick;
+        //OLD: socket.broadcast.emit('announcement', nick + ' connected');
+        socket.r_broadcast_emit('announcement', nick + ' connected');
+        //OLD: io.sockets.emit('nicknames', nicknames);
+        nicknames.get_members(function(members) {
+          rsr.r_emit('nicknames', members);
+        });
+        }
+    });
   });
 
   socket.on('disconnect', function () {
     if (!socket.nickname) return;
 
-    delete nicknames[socket.nickname];
+    // OLD: delete nicknames[socket.nickname];
+    nicknames.delete(socket.nickname);
     // OLD: socket.broadcast.emit('announcement', socket.nickname + ' disconnected');
     socket.r_broadcast_emit('announcement', socket.nickname + ' disconnected');
     // OLD: socket.broadcast.emit('nicknames', nicknames);
-    socket.r_broadcast_emit('nicknames', nicknames);
+    nicknames.get_members(function(members) {
+      socket.r_broadcast_emit('nicknames', members);
+    });
   });
 });

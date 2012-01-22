@@ -25,6 +25,80 @@ function Manager(io, options) {
 			console.log('Redis error: cannot set process id');
 	});
 
+	// Redis Sets wrapper
+	// -----------------------------
+	this.Sets = function(set) {
+		var set_key = self.redis_prefix + set;
+		var self_sets = this;
+		// sets.add(value,unique,callback)
+		// Add a member to a set
+		// [value]:    value to add in the set
+		// [unique]:   default false, must be unique?
+		// [callback]: returns true or false on success or failure
+		// -----------------------------
+		this.add = function(value,unique,callback) {			
+			self.debug("sets.add()",set,value,unique)
+			if (unique) {
+				self_sets.exists(value,function(err,result) {
+					if (!err && result)
+						callback && callback(false); // already exists
+					else
+						self_sets.add(value,false,callback);
+				});
+			}
+			else {
+				self.rc.sadd(set_key,value,function(err2,result2) {
+					if (result2 && !err2)
+						callback && callback(true); // success
+					else
+						callback && callback(false);	// Unknown error
+					
+				});
+
+			}
+			
+		};
+
+		this.delete = function(value,callback) {
+			self.rc.srem(set_key,value,function(err,result) {
+				if (!err)
+					callback && callback(true); // success
+				else
+					callback && callback(false); // error	
+			});
+		};
+
+		this.get_members = function(callback) {
+			self.debug("Sets.get_members()");
+			self.rc.smembers(set_key,function(err,members) {
+				self.debug("MEMBERS",members);
+				if (members && !err)
+					callback && callback(members);
+				else
+					callback && callback([]);
+			});
+		};
+
+		// sets.exists(set,value,callback)
+		// Checks if value member of a set
+		// [set]:      set key, i.e.: nicknames
+		// [value]:    value to add in the set
+		// [callback]: returns true or false on success or failure
+		// -----------------------------
+		this.exists = function(value,callback) {
+			self.rc.sismember(set_key,value,function(err,result) {
+				if (result && !err)
+					callback(true); // Exists
+				else {
+					callback(false);
+				}
+			});
+			
+		};
+
+		return this;
+	};
+
 	// Create publish subscribe
 	// -----------------------------
 	this.rc_sub.subscribe(self.redis_channel);
