@@ -12,6 +12,7 @@ function Manager(io, options) {
 	this.rc_sub = (options && options.redis_client_sub) ? options.redis_client_sub : redis.createClient();
 	this.redis_channel = (options && options.redis_channel) ? options.redis_channel : "rs";
 	this.redis_prefix = this.redis_channel + '.';
+	this.debug_mode = (options && options.debug) || false;
 
 	var self = this;
 
@@ -29,10 +30,9 @@ function Manager(io, options) {
 	this.rc_sub.subscribe(self.redis_channel);
 
 	this.rc_sub.on("message", function (channel, json) {
-		// console.log("JSON",JSON.stringify(json));
 		var content = JSON.parse(json);
-		console.log("Message received",content);
-		console.log(content.command);
+		self.debug("Message received",content);
+		self.debug("command",content.command);
 		switch(content.command) {
 			case "r_emit":
 				self.io.sockets.emit(content.args[0],content.args[1]);
@@ -40,12 +40,12 @@ function Manager(io, options) {
 			case "r_send_user":
 				var sock = io.sockets.socket(content.client_id);
 				if (sock && sock.id) {
-					console.log("sending direct update to ",sock.id)
+					self.debug("sending direct update to ",sock.id)
 					sock.emit(content.type,content.message);
 				}
 				break;
 			case "r_broadcast_emit":
-				// console.log("TRANSPORTS: ", self.io.sockets.manager.transports)
+				// self.debug("TRANSPORTS: ", self.io.sockets.manager.transports)
 				if (self.process_id == content.process_id) {
 					// Sent by same process, use broadcast
 					// i.e.: find emitting socket and use broadcast.emit method
@@ -57,13 +57,6 @@ function Manager(io, options) {
 						// Socket,d oesnt exist anymore
 						// Use global emit
 						self.io.sockets.emit(content.args[0],content.args[1]);
-
-					// for(socket in self.io.sockets.manager.sockets.sockets) {
-					// 	var sock = io.sockets.socket(socket).broadcast;
-					// 	if (sock)
-					// 		sock.emit.apply(sock,content.args);
-					// 	//io.sockets.socket(socket).emit(content.args[0],content.args.slice(1)); // Ref: http://chrissilich.com/blog/socket-io-0-7-sending-messages-to-individual-clients/
-					// }
 					
 				}
 				else {
@@ -77,12 +70,12 @@ function Manager(io, options) {
 
 	this.on = function(msg,cb) {
 		self.io.sockets.on(msg,function(socket) {
-			console.log("SOCKET ID: ",socket.id)
+			self.debug("SOCKET ID: ",socket.id)
 			if (msg == 'connection') {
-				console.log("New connection");
+				self.debug("New connection");
 			}
 			socket.r_broadcast_emit = function() {
-				console.log('ARGUMENTS:',arguments);
+				self.debug('ARGUMENTS:',arguments);
 				var args = [];
 				for (var i=0;i<arguments.length;i++) {
 					args.push(arguments[i]);
@@ -93,8 +86,8 @@ function Manager(io, options) {
 					process_id: self.process_id,
 					args: args
 				};
-				console.log('r_broadcast_emit');
-				console.log('CONTENT:',content);
+				self.debug('r_broadcast_emit');
+				self.debug('CONTENT:',content);
 				//socket.broadcast.emit.apply(socket,arguments);
 				self.rc_pub.publish(self.redis_channel,JSON.stringify(content));
 			};
@@ -110,16 +103,16 @@ function Manager(io, options) {
 			type: type,
 			message: msg
 		};
-		console.log('r_send_user');
+		self.debug('r_send_user');
 		//socket.broadcast.emit.apply(socket,arguments);
 		self.rc_pub.publish(self.redis_channel,JSON.stringify(content));		
 	};
 
 	this.r_emit = function() {
-		// console.log("SOCKETS: ",self.io.sockets.manager.sockets.sockets);
-		// console.log("--END SOCKETS");
-		// console.log("r_emit calling")
-		// console.log("ARGUMENTS",arguments);
+		// self.debug("SOCKETS: ",self.io.sockets.manager.sockets.sockets);
+		// self.debug("--END SOCKETS");
+		// self.debug("r_emit calling")
+		// self.debug("ARGUMENTS",arguments);
 		var content = {
 			command: "r_emit",
 			process_id: self.process_id,
@@ -128,6 +121,20 @@ function Manager(io, options) {
 		self.rc_pub.publish(self.redis_channel,JSON.stringify(content));
 		//self.io.sockets.emit(arguments[0],arguments[1]);
 	};
+
+	this.debug = function() {
+		if (self.debug_mode) {
+			var args = Array.prototype.slice.call(arguments);
+			args.splice(0,0,"DEBUG")
+			console.log.apply(console,args);
+		}
+	};
+
+	if (this.debug_mode) {
+		console.log("DEBUG mode ON.");
+	}
+
+
 
 	return this;
 

@@ -55,7 +55,7 @@ app.listen(3000, function () {
 var io = sio.listen(app)
   , nicknames = {};
 
-var rsr = RedSocket(io);
+var rsr = RedSocket(io,{debug: true});
 
 rsr.on('connection', function (socket) {
   socket.on('user message', function (msg) {
