@@ -110,16 +110,21 @@ Then use the Redis set helper to get members of the nicknames set and use rsr.r_
         });
       });
 
+On disconnect, we need to use a callback to the Redis Sets helper and then broadcast using socket.r_broadcast_emit().
+
       socket.on('disconnect', function () {
         if (!socket.nickname) return;
 
         // OLD: delete nicknames[socket.nickname];
-        nicknames.delete(socket.nickname);
-        // OLD: socket.broadcast.emit('announcement', socket.nickname + ' disconnected');
-        socket.r_broadcast_emit('announcement', socket.nickname + ' disconnected');
-        // OLD: socket.broadcast.emit('nicknames', nicknames);
-        nicknames.get_members(function(members) {
-          socket.r_broadcast_emit('nicknames', members);
+        nicknames.delete(socket.nickname,function(deleted) {
+            if (deleted) {
+                // OLD: socket.broadcast.emit('announcement', socket.nickname + ' disconnected');
+                socket.r_broadcast_emit('announcement', socket.nickname + ' disconnected');
+                // OLD: socket.broadcast.emit('nicknames', nicknames);
+                nicknames.get_members(function(members) {
+                  socket.r_broadcast_emit('nicknames', members);
+                });                
+            }
         });
       });
     });

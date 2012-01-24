@@ -92,12 +92,13 @@ rsr.on('connection', function (socket) {
     if (!socket.nickname) return;
 
     // OLD: delete nicknames[socket.nickname];
-    nicknames.delete(socket.nickname);
-    // OLD: socket.broadcast.emit('announcement', socket.nickname + ' disconnected');
-    socket.r_broadcast_emit('announcement', socket.nickname + ' disconnected');
-    // OLD: socket.broadcast.emit('nicknames', nicknames);
-    nicknames.get_members(function(members) {
-      socket.r_broadcast_emit('nicknames', members);
+    nicknames.delete(socket.nickname,functiion(deleted) {
+      // OLD: socket.broadcast.emit('announcement', socket.nickname + ' disconnected');
+      socket.r_broadcast_emit('announcement', socket.nickname + ' disconnected');
+      // OLD: socket.broadcast.emit('nicknames', nicknames);
+      nicknames.get_members(function(members) {
+        socket.r_broadcast_emit('nicknames', members);
+      });      
     });
   });
 });
