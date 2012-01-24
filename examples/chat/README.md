@@ -2,8 +2,7 @@
 
 This is a copy of the socket.io [chat example](https://github.com/LearnBoost/socket.io/tree/master/examples/chat) with commented modifications using red-socket
 
-Code commented out is old code. 
-
+Modifications to original socket.io example commented below:
 
 # Server-side code
 
@@ -15,7 +14,12 @@ Code commented out is old code.
       , stylus = require('stylus')
       , nib = require('nib')
       , sio = require('socket.io')
+
+Define red-socket object
+
       , RedSocket = require('../../index');
+
+
 
     /**
      * App.
@@ -62,10 +66,15 @@ Code commented out is old code.
      */
 
     var io = sio.listen(app);
+
+Define RedSocket instance and put nicknames in a Redis set. Nicknames need to be shared between processes.
+
     //OLD:  , nicknames = {};
 
     var rsr = RedSocket(io,{debug: true});
     var nicknames = new rsr.Sets("nicknames");
+
+Use rsr.on instead of io.on
 
     rsr.on('connection', function (socket) {
       socket.on('user message', function (msg) {
