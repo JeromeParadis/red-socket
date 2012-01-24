@@ -17,6 +17,48 @@ Through github:
 
 See [Chat Example](https://github.com/JeromeParadis/red-socket/tree/master/examples/chat)
 
+    var io = require('socket.io').listen(80),
+        RedSocket = require('red-socket');
+    
+    var rsr = RedSocket(io,options);
+
+Then, you can use:
+
+    rsr.on("connection")
+
+instead of 
+
+    io.sockets.on("connection")
+
+to wrap your socket code. Then, to wrap calls through pub-sub and dispatch to all sockets, you can use:
+
+    socket.r_broadcast_emit()
+    rsr.r_emit()
+
+instead of
+
+    socket.r_broadcast_emit()
+    socket.emit()
+
+## Redis sets helper:
+
+As a convenience, red-socket defines an helper to manage redis sets. Can be useful to use as a datastore instead of using a local array that wouldn't be shared between instances.
+
+All methods can support a facultative callback with a boolean parameter that returns success or failure except for get_members that returns an array of the set members.
+
+    var nicknames = new rsr.Sets("nicknames");
+
+ gives you:
+
+    nicknames.add(value,unique,callback)   // Add a value to the set
+
+unique is a boolean
+
+    nickname.delete(value,callback)        // Delete a value from the set
+    nickname.delete_set()                  // Destroy the set
+    nickname.get_members(callback)
+
+## Options    
 
 
 # TODO:

@@ -92,7 +92,7 @@ rsr.on('connection', function (socket) {
     if (!socket.nickname) return;
 
     // OLD: delete nicknames[socket.nickname];
-    nicknames.delete(socket.nickname,functiion(deleted) {
+    nicknames.delete(socket.nickname,function(deleted) {
       // OLD: socket.broadcast.emit('announcement', socket.nickname + ' disconnected');
       socket.r_broadcast_emit('announcement', socket.nickname + ' disconnected');
       // OLD: socket.broadcast.emit('nicknames', nicknames);
