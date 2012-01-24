@@ -91,6 +91,10 @@ Use rsr.on instead of io.on
         //   socket.broadcast.emit('announcement', nick + ' connected');
         //   io.sockets.emit('nicknames', nicknames);
         // }
+
+Use socket.r_broadcast_emit() instead of socket.broadcast.emit.
+Then use the Redis set helper to get members of the nicknames set and use rsr.r_emit() instead of io.sock Then use rsr.r_emit() instead of io.sockets.emit().
+
         nicknames.add(nick,true,function(is_new) {
           fn(!is_new);
           if (is_new) {
