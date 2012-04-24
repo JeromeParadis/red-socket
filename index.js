@@ -20,7 +20,7 @@ function Manager(io, options) {
 	// -----------------------------
 	this.rc.incr(redis_prefix + "processes.counter", function(err,res) {
 		if (res)
-			this.process_id = parseFloat(res);
+			self.process_id = parseFloat(res);
 		else
 			console.log('Redis error: cannot set process id');
 	});
