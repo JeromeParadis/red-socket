@@ -19,8 +19,7 @@ function Manager(io, options) {
 
 	// Set process id
 	// -----------------------------
-	this.rc.incr("processes.counter", function(err,res) {
-		
+	this.rc.incr("process.incr", function(err,res) {
 		if (res)
 			self.process_id = parseFloat(res);
 		else
