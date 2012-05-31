@@ -301,13 +301,21 @@ NamespaceRedisClient.prototype.send_command = function (command, args, callback)
  * Adds the prefix.
  */
 NamespaceRedisClient.prototype.addPrefix = function(key) {
-	if (key.charAt(0) == ':') {
-		key = key.substr(1);
+	if( typeof key === 'string' ) {
+		if (key.charAt(0) == ':') {
+			key = key.substr(1);
+		}
+		else if (key.substr(0, this.prefix.length) != this.prefix) {
+			key = this.prefix + key;
+		}
+		return key;
+	} else if (key) { // list
+		ln = key.length;
+		for (var i=0;i<ln;i++)
+			key[i] = this.addPrefix(key[i]);
+		return key;
 	}
-	else if (key.substr(0, this.prefix.length) != this.prefix) {
-		key = this.prefix + key;
-	}
-	return key;
+	return null;
 }
 
 
