@@ -1,6 +1,6 @@
 {
     "name": "red-socket"
-  , "version": "0.0.2"
+  , "version": "0.0.3"
   , "description": "Redis socket.io wrapper"
   , "homepage": "https://github.com/JeromeParadis/red-socket"
   , "keywords": ["websocket", "socket", "realtime", "socket.io", "comet", "ajax"]
