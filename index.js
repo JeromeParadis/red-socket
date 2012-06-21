@@ -8,12 +8,13 @@ function Manager(io, options) {
 	// -----------------------------
 	if (!options) options = {}
 	this.io = io;
+	this.debug_mode = options && options.debug || false;
+	this.log_errors = options.log_errors || true;
 	this.redis_prefix = options.redis_prefix || '';
 	this.redis_channel = this.redis_prefix || 'rc';
-	this.rc = options.redis_client || createClient(null, null, {prefix: this.redis_prefix});
-	this.rc_pub = options.redis_client_pub || createClient(null, null, {prefix: this.redis_prefix});
-	this.rc_sub = options.redis_client_sub || createClient(null, null, {prefix: this.redis_prefix});
-	this.debug_mode = options.debug || false;
+	this.rc = options.redis_client || createClient(null, null, {prefix: this.redis_prefix, debug: this.debug_mode});
+	this.rc_pub = options.redis_client_pub || createClient(null, null, {prefix: this.redis_prefix, debug: this.debug_mode});
+	this.rc_sub = options.redis_client_sub || createClient(null, null, {prefix: this.redis_prefix, debug: this.debug_mode});
 
 	var self = this;
 
@@ -23,7 +24,8 @@ function Manager(io, options) {
 		if (res)
 			self.process_id = parseFloat(res);
 		else
-			console.log('Redis error: cannot set process id', err);
+			if (self.log_errors)
+				console.log('Redis error: cannot set process id', err);
 	});
 
 	// Redis Sets wrapper
@@ -236,7 +238,9 @@ function Manager(io, options) {
 function NamespaceRedisClient(net_client, options) {
 	redis.RedisClient.call(this, net_client, options);
 	this.prefix = options && options.prefix ? options.prefix : '';
-	console.log('NamespaceRedisClient()', 'options:', options);
+	this.debug = options && options.debug || false;
+	if (this.debug)
+		console.log('NamespaceRedisClient()', 'options:', options);
 }
 
 
@@ -291,7 +295,8 @@ NamespaceRedisClient.prototype.send_command = function (command, args, callback)
 				break;
 		}
 	}
-	console.log('NamespaceRedisClient.send_command()', 'type:', cmdType, 'command:', command, args);
+	if (this.debug)
+		console.log('NamespaceRedisClient.send_command()', 'type:', cmdType, 'command:', command, args);
 	//~ if (args[0] == 'shwowp-notify.shwowp-notify.processes.counter') throw new Error('debug');
 	return redis.RedisClient.prototype.send_command.call(this, command, args, callback);
 }
